@@ -318,7 +318,7 @@ async function submitDeposit() {
   formData.append("screenshot", receipt);
 
   try {
-    const res = await fetch("http://localhost:3000/user/deposit", {
+    const res = await fetch("https://harvestive-com.onrender.com/user/deposit", {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: formData
