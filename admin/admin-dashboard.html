@@ -121,7 +121,7 @@
     if (!confirmAction) return;
 
     try {
-      const res = await fetch(`http://localhost:3000/admin/approve/${depositId}`, {
+      const res = await fetch(`https://harvestive-com.onrender.com/admin/approve/${depositId}`, {
         method: "POST",
         headers: {
           "Authorization": "Bearer " + ADMIN_PASSWORD
