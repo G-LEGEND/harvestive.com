@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Withdraw</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+
+    .withdraw-container {
+      max-width: 500px;
+      margin: auto;
+      padding: 30px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: gold;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background-color: #e6c200;
+    }
+
+    .pending-message {
+      margin-top: 20px;
+      color: #ff6600;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .balance-info {
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="withdraw-container">
+    <h2>Withdraw Funds</h2>
+    <div class="balance-info">
+      Current Balance: <span id="currentBalance">0.00</span> USD
+    </div>
+
+    <label for="amount">Amount (USD) <small>(Minimum $150)</small></label>
+    <input id="amount" type="number" placeholder="Enter amount to withdraw">
+
+    <label for="method">Withdrawal Method</label>
+    <select id="method">
+      <option value="USDT">USDT</option>
+      <option value="BTC">BTC</option>
+    </select>
+
+    <label for="address">Wallet Address</label>
+    <input id="address" type="text" placeholder="Enter your wallet address">
+
+    <button onclick="withdraw()">Confirm Withdrawal</button>
+
+    <div class="pending-message" id="pendingMsg"></div>
+  </div>
+
+  <script>
+    let userBalance = 0;
+
+    async function loadBalance() {
+      const token = localStorage.getItem("token");
+      if (!token) return window.location.href = "index.html";
+
+      try {
+        const res = await fetch("http://localhost:3000/user/dashboard", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.message || "Access denied");
+
+        userBalance = data.user.balance || 0;
+        document.getElementById("currentBalance").innerText = userBalance.toFixed(2);
+
+      } catch (err) {
+        console.error(err);
+        alert("Error loading balance. Please login again.");
+        localStorage.removeItem("token");
+        window.location.href = "index.html";
+      }
+    }
+
+    async function withdraw() {
+      const amount = parseFloat(document.getElementById("amount").value);
+      const method = document.getElementById("method").value;
+      const address = document.getElementById("address").value.trim();
+      const pendingMsg = document.getElementById("pendingMsg");
+
+      if (!amount || !address) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      if (amount < 150) {
+        alert("Minimum withdrawal amount is $150.");
+        return;
+      }
+
+      if (amount > userBalance) {
+        alert(`Insufficient balance. You only have $${userBalance.toFixed(2)}.`);
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await fetch("http://localhost:3000/user/withdraw", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ amount, method, address })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.message || "Withdrawal failed");
+          return;
+        }
+
+        pendingMsg.innerText = `Withdrawal of $${amount.toFixed(2)} via ${method} is pending approval.`;
+
+        // Update balance display
+        userBalance -= amount;
+        document.getElementById("currentBalance").innerText = userBalance.toFixed(2);
+
+        // Refresh dashboard if open
+        if (window.opener && !window.opener.closed) {
+          window.opener.loadDashboard && window.opener.loadDashboard();
+        }
+
+        // Clear inputs
+        document.getElementById("amount").value = "";
+        document.getElementById("address").value = "";
+
+      } catch (err) {
+        console.error(err);
+        alert("Error connecting to server.");
+      }
+    }
+
+    window.onload = loadBalance;
+  </script>
+</body>
+</html>

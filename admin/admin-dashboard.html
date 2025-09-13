@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
+    h1 { color: #333; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; background: #fff; border: 1px solid #ccc; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background-color: #f5f5f5; }
+    .screenshot-img { max-width: 80px; height: auto; border: 1px solid #ccc; border-radius: 4px; }
+    button { padding: 6px 12px; background-color: #28a745; color: white; border: none; cursor: pointer; border-radius: 4px; }
+    button:hover { background-color: #218838; }
+    .logout { float: right; background-color: #dc3545; margin-top: -40px; }
+    .logout:hover { background-color: #c82333; }
+    h2 { margin-top: 50px; color: #555; }
+  </style>
+</head>
+<body>
+
+<script>
+  // -------------------------
+  // Admin password prompt
+  // -------------------------
+  const ADMIN_PASSWORD = "sholashola";
+  const adminInput = prompt("Enter admin password:");
+  if (adminInput !== ADMIN_PASSWORD) {
+    alert("Access denied");
+    window.location.href = "../index.html";
+  }
+</script>
+
+<h1>Admin Dashboard</h1>
+<button class="logout" onclick="logout()">Logout</button>
+
+<h2>👥 All Users</h2>
+<table id="usersTable">
+  <thead>
+    <tr>
+      <th>Email</th>
+      <th>Username</th>
+      <th>Balance ($)</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<h2>💰 Pending Deposits</h2>
+<table id="depositsTable">
+  <thead>
+    <tr>
+      <th>Email</th>
+      <th>Amount</th>
+      <th>Method</th>
+      <th>Screenshot</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+  // -------------------------
+  // Load admin dashboard
+  // -------------------------
+  async function loadAdminData() {
+    try {
+      const res = await fetch("http://localhost:3000/admin/dashboard", {
+        headers: {
+          "Authorization": "Bearer " + ADMIN_PASSWORD
+        }
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.message || "Unauthorized");
+
+      // Render users
+      const usersTable = document.querySelector("#usersTable tbody");
+      usersTable.innerHTML = "";
+      (data.users || []).forEach(user => {
+        usersTable.innerHTML += `
+          <tr>
+            <td>${user.email || ""}</td>
+            <td>${user.username || user.name || ""}</td>
+            <td>${(user.balance || 0).toFixed(2)}</td>
+          </tr>
+        `;
+      });
+
+      // Render pending deposits
+      const depositsTable = document.querySelector("#depositsTable tbody");
+      depositsTable.innerHTML = "";
+      (data.pendingDeposits || []).forEach(deposit => {
+        depositsTable.innerHTML += `
+          <tr>
+            <td>${deposit.user?.email || ""}</td>
+            <td>${(deposit.amount || 0).toFixed(2)}</td>
+            <td>${deposit.method || ""}</td>
+            <td>
+              <a href="/uploads/${deposit.screenshot || ''}" target="_blank">
+                <img src="/uploads/${deposit.screenshot || ''}" class="screenshot-img" alt="screenshot">
+              </a>
+            </td>
+            <td><button onclick="approveDeposit('${deposit.id}')">Approve</button></td>
+          </tr>
+        `;
+      });
+
+    } catch (err) {
+      console.error(err);
+      alert("Error loading dashboard: " + err.message);
+    }
+  }
+
+  // -------------------------
+  // Approve deposit
+  // -------------------------
+  async function approveDeposit(depositId) {
+    const confirmAction = confirm("Are you sure you want to approve this deposit?");
+    if (!confirmAction) return;
+
+    try {
+      const res = await fetch(`http://localhost:3000/admin/approve/${depositId}`, {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + ADMIN_PASSWORD
+        }
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.message || "Failed to approve deposit");
+
+      alert("✅ Deposit approved!");
+      loadAdminData();
+    } catch (err) {
+      console.error(err);
+      alert("❌ Failed to approve deposit: " + err.message);
+    }
+  }
+
+  // -------------------------
+  // Logout
+  // -------------------------
+  function logout() {
+    window.location.href = "../index.html";
+  }
+
+  // Load dashboard when page loads
+  loadAdminData();
+</script>
+
+</body>
+</html>

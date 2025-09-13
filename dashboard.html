@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <h2 id="welcomeText">Welcome, User</h2>
+
+    <div class="balance-section">
+      <div class="card big balance-card">
+        <p>Account balance</p>
+        <b id="balance">0.00 USD</b>
+      </div>
+
+      <div class="small-cards">
+        <div class="card small withdraw-card">
+          <p>Total withdraw</p>
+          <b id="withdraw">0.00 USD</b>
+        </div>
+        <div class="card small deposit-card">
+          <p>Total deposit</p>
+          <b id="deposit">0.00 USD</b>
+        </div>
+        <div class="card small invest-card">
+          <p>Total invest</p>
+          <b id="invest">0.00 USD</b>
+        </div>
+        <div class="card small current-invest-card">
+          <p>Current invest</p>
+          <b id="currentInvest">0.00 USD</b>
+        </div>
+      </div>
+    </div>
+
+    <h3>More options</h3>
+    <div class="options-grid single-option">
+      <img src="https://i.supaimg.com/428137b2-eb6d-4b4a-abce-f260ecaeafbe.png" alt="Options" class="options-img">
+    </div>
+
+    <div class="referral-section">
+      <h3>Your Referral Link</h3>
+      <div class="referral-box">
+        <input type="text" id="referralLink" readonly>
+        <button onclick="copyReferral()">Copy</button>
+      </div>
+    </div>
+
+    <div class="support-section" style="margin-top:20px;">
+      <p>Need help? <a href="mailto:Info.myharvestine@gmail.com">Contact Customer Support</a></p>
+    </div>
+
+    <button onclick="logout()" class="login-btn" style="margin-top:20px;">Logout</button>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="deposit.html"><i class="fas fa-wallet"></i><br>Deposit</a>
+    <a href="invest.html"><i class="fas fa-piggy-bank"></i><br>My invest</a>
+    <a href="dashboard.html" class="active"><i class="fas fa-home"></i><br>Home</a>
+    <a href="withdraw.html"><i class="fas fa-money-bill"></i><br>Withdraw</a>
+    <a href="transfer.html"><i class="fas fa-exchange-alt"></i><br>Transfer</a>
+  </div>
+
+  <script>
+    async function loadDashboard() {
+      const token = localStorage.getItem("token");
+      if (!token) return window.location.href = "index.html";
+
+      try {
+        const res = await fetch("http://localhost:3000/user/dashboard", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.message || "Access denied");
+
+        const user = data.user;
+
+        // Update user info
+        document.getElementById("welcomeText").innerText = "Welcome, " + user.name;
+        document.getElementById("balance").innerText = (user.balance || 0).toFixed(2) + " USD";
+
+        // Deposits
+        const deposits = data.deposits || [];
+        const totalDeposit = deposits.reduce((sum, d) => d.status === "approved" ? sum + d.amount : sum, 0);
+        document.getElementById("deposit").innerText = totalDeposit.toFixed(2) + " USD";
+
+        // Investments
+        document.getElementById("invest").innerText = (user.totalInvest || 0).toFixed(2) + " USD";
+        document.getElementById("currentInvest").innerText = (user.currentInvest || 0).toFixed(2) + " USD";
+
+        // Withdraw
+        document.getElementById("withdraw").innerText = (user.totalWithdraw || 0).toFixed(2) + " USD";
+
+        // Referral
+        document.getElementById("referralLink").value =
+          window.location.origin + "/register.html?ref=" + user.id;
+
+      } catch (err) {
+        console.error(err);
+        alert("Error loading dashboard. Please login again.");
+        localStorage.removeItem("token");
+        window.location.href = "index.html";
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem("token");
+      window.location.href = "index.html";
+    }
+
+    function copyReferral() {
+      const input = document.getElementById("referralLink");
+      navigator.clipboard.writeText(input.value).then(() => alert("Referral link copied!"));
+    }
+
+    // Auto-load dashboard on page load
+    window.onload = loadDashboard;
+  </script>
+</body>
+</html>

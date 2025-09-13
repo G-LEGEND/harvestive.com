@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Invest</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f2f2f2;
+    }
+
+    .plan-card {
+      background-color: white;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      position: relative;
+    }
+
+    .plan-header {
+      background: linear-gradient(to right, gold, #d4af37);
+      color: black;
+      text-align: center;
+      padding: 20px;
+      font-weight: bold;
+      font-size: 18px;
+      border-radius: 10px 10px 0 0;
+      clip-path: polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%);
+    }
+
+    .plan-body {
+      padding-top: 20px;
+    }
+
+    .plan-body ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .plan-body li {
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    .checkmark {
+      color: gold;
+      font-weight: bold;
+      margin-right: 5px;
+    }
+
+    .affiliate {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .affiliate-levels {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .level {
+      border: 1px solid gold;
+      border-radius: 50%;
+      padding: 10px;
+      width: 60px;
+      height: 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .invest-btn {
+      background: linear-gradient(to right, gold, #d4af37);
+      border: none;
+      border-radius: 6px;
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* Modal */
+    #investModal {
+      display: none;
+      position: fixed;
+      z-index: 99;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+    }
+
+    #investModal .modal-content {
+      background: white;
+      max-width: 400px;
+      margin: 10% auto;
+      padding: 20px;
+      border-radius: 8px;
+    }
+
+    #investModal input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+    }
+
+    #investModal button {
+      width: 100%;
+      padding: 10px;
+      background: gold;
+      border: none;
+      font-weight: bold;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📈 Investment Plans</h2>
+  <div id="plansContainer"></div>
+
+  <!-- Modal -->
+  <div id="investModal">
+    <div class="modal-content">
+      <h3 id="modalPlanName">Invest in Plan</h3>
+      <input type="number" id="investAmount" placeholder="Enter amount to invest">
+      <button onclick="confirmInvestment()">Confirm</button>
+      <button onclick="closeInvestModal()">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    const plans = [
+      { name: 'STANDARD PLAN', rate: '3.50%', min: 100, max: 9999, times: 5, capitalBack: 'Yes', levels: [8,12,16,20,30] },
+      { name: 'PREMIUM PLAN', rate: '4.50%', min: 5000, max: 24000, times: 5, capitalBack: 'Yes', levels: [8,12,16,20,30] },
+      { name: 'INVESTORS PLAN', rate: '7.50%', min: 25000, max: 39999, times: 5, capitalBack: 'Yes', levels: [8,12,16,20,30] },
+      { name: 'CONFIDENT PLAN', rate: '12.00%', min: 40000, max: 1000000, times: 5, capitalBack: 'Yes', levels: [8,12,16,20,30] },
+    ];
+
+    let selectedPlan = null;
+
+    function renderPlans() {
+      const container = document.getElementById('plansContainer');
+      plans.forEach((plan, index) => {
+        const card = document.createElement('div');
+        card.className = 'plan-card';
+        card.innerHTML = `
+          <div class="plan-header">${plan.name}<br><span style="font-size: 24px;">${plan.rate} <small>% Day</small></span></div>
+          <div class="plan-body">
+            <ul>
+              <li><span class="checkmark">✔️</span> Minimum: <strong>${plan.min.toFixed(2)} USD</strong></li>
+              <li><span class="checkmark">✔️</span> Maximum: <strong>${plan.max.toLocaleString()} USD</strong></li>
+              <li><span class="checkmark">✔️</span> For: <strong>${plan.times} Times</strong></li>
+              <li><span class="checkmark">✔️</span> Capital back: <strong>${plan.capitalBack}</strong></li>
+            </ul>
+            <div class="affiliate">
+              <strong>Affiliate bonus</strong>
+              <div class="affiliate-levels">
+                ${plan.levels.map((level,i)=>`<div class="level">${level}%<br><small>level ${i+1}</small></div>`).join('')}
+              </div>
+            </div>
+            <button class="invest-btn" onclick="openInvestModal(${index})">Invest now</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function openInvestModal(index) {
+      selectedPlan = plans[index];
+      document.getElementById('modalPlanName').innerText = `Invest in ${selectedPlan.name}`;
+      document.getElementById('investAmount').value = '';
+      document.getElementById('investModal').style.display = 'block';
+    }
+
+    function closeInvestModal() {
+      document.getElementById('investModal').style.display = 'none';
+    }
+
+    async function confirmInvestment() {
+      const amount = parseFloat(document.getElementById('investAmount').value);
+      if (!amount || isNaN(amount)) return alert('Enter a valid amount');
+      if (amount < selectedPlan.min || amount > selectedPlan.max)
+        return alert(`Amount must be between ${selectedPlan.min} and ${selectedPlan.max} USD`);
+
+      const token = localStorage.getItem('token');
+      if (!token) return alert('Login required');
+
+      try {
+        const res = await fetch('http://localhost:3000/user/invest', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ amount })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Investment failed');
+
+        alert('✅ Investment successful!');
+        closeInvestModal();
+
+        // Update dashboard totals live
+        if (window.opener && !window.opener.closed) {
+          const investElem = window.opener.document.getElementById('invest');
+          const currentElem = window.opener.document.getElementById('currentInvest');
+
+          if (investElem) {
+            const oldTotal = parseFloat(investElem.innerText) || 0;
+            investElem.innerText = (oldTotal + amount).toFixed(2) + ' USD';
+          }
+          if (currentElem) {
+            const oldCurrent = parseFloat(currentElem.innerText) || 0;
+            currentElem.innerText = (oldCurrent + amount).toFixed(2) + ' USD';
+          }
+        }
+
+      } catch (err) {
+        alert('❌ ' + err.message);
+      }
+    }
+
+    renderPlans();
+  </script>
+</body>
+</html>

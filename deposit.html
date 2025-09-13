@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deposit</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding-bottom: 70px;
+    }
+
+    h2, h3 {
+      text-align: center;
+      color: #333;
+    }
+
+    .deposit-container {
+      max-width: 400px;
+      margin: 20px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .payment-option {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 15px;
+      margin: 10px 0;
+      text-align: center;
+      background: #fafafa;
+    }
+
+    .gold-btn, .red-btn {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 10px;
+      transition: 0.2s;
+    }
+
+    .gold-btn { background: #f5b700; color: #fff; }
+    .gold-btn:hover { background: #d99c00; }
+    .red-btn { background: #e74c3c; color: #fff; }
+    .red-btn:hover { background: #c0392b; }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 350px;
+      position: relative;
+      text-align: center;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 22px;
+      cursor: pointer;
+      color: #333;
+    }
+
+    input[type="number"], input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-top: 5px;
+      margin-bottom: 15px;
+      box-sizing: border-box;
+    }
+
+    .payment-info {
+      max-width: 400px;
+      margin: 20px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .payment-info-section { margin-bottom: 15px; }
+    .payment-info-section p { margin: 5px 0; }
+
+    .qr-img { max-width: 150px; margin-top: 10px; display: none; }
+    #receiptPreview { margin-top: 10px; max-width: 200px; display: none; border: 2px solid #ccc; border-radius: 8px; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    table td { padding: 6px 4px; }
+    table td:first-child { font-weight: bold; }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+      background: #fff;
+      border-top: 1px solid #ccc;
+      padding: 8px 0;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+      z-index: 5;
+    }
+
+    .bottom-nav a {
+      text-align: center;
+      color: #555;
+      text-decoration: none;
+      font-size: 12px;
+    }
+
+    .bottom-nav a.active { color: #f5b700; font-weight: bold; }
+    .bottom-nav a i { display: block; font-size: 20px; margin-bottom: 2px; }
+  </style>
+</head>
+<body>
+
+<div class="deposit-container">
+  <h2>Deposit</h2>
+  <div id="paymentOptions"></div>
+</div>
+
+<!-- Deposit Modal -->
+<div id="depositModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeModal()">&times;</span>
+    <h3>Deposit amount</h3>
+    <label>Amount</label>
+    <input type="number" id="depositAmount" placeholder="Enter amount (min 100)">
+    <div class="modal-actions">
+      <button class="red-btn" onclick="closeModal()">Close</button>
+      <button class="gold-btn" onclick="showPaymentInfo()">Deposit now</button>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Info -->
+<div id="paymentInfo" class="payment-info" style="display:none;">
+  <div id="cryptoInfo" class="payment-info-section">
+    <h3>Send Crypto Payment</h3>
+    <p><b>Name:</b> <span id="cryptoName">...</span></p>
+    <p><b>Address:</b> <span id="cryptoAddress">...</span>
+      <button onclick="copyText('cryptoAddress')">Copy</button>
+    </p>
+    <img id="cryptoQR" src="" alt="QR Code" class="qr-img">
+  </div>
+
+  <div id="paypalInfo" class="payment-info-section">
+    <h3>Send PayPal Payment</h3>
+    <p><b>Name:</b> <span id="paypalName">...</span></p>
+    <p><b>PayPal Email:</b> <span id="paypalEmail">...</span>
+      <button onclick="copyText('paypalEmail')">Copy</button>
+    </p>
+  </div>
+
+  <h3>Payment Summary</h3>
+  <table>
+    <tr><td>Gateway:</td><td id="gatewayName">-</td></tr>
+    <tr><td>Amount:</td><td id="payAmount">0.00 USD</td></tr>
+    <tr><td>Total payable:</td><td id="totalAmount">0.00 USD</td></tr>
+  </table>
+
+  <h3>Requirements</h3>
+  <label>Upload Payment Receipt</label>
+  <input type="file" id="receiptFile" accept="image/*" onchange="previewReceipt()">
+  <img id="receiptPreview" alt="Receipt Preview">
+
+  <button class="gold-btn" onclick="submitDeposit()">Submit Deposit</button>
+</div>
+
+<div class="bottom-nav">
+  <a href="deposit.html" class="active"><i class="fas fa-wallet"></i><br>Deposit</a>
+  <a href="invest.html"><i class="fas fa-piggy-bank"></i><br>My invest</a>
+  <a href="dashboard.html"><i class="fas fa-home"></i><br>Home</a>
+  <a href="withdraw.html"><i class="fas fa-money-bill"></i><br>Withdraw</a>
+  <a href="transfer.html"><i class="fas fa-exchange-alt"></i><br>Transfer</a>
+</div>
+
+<script>
+let selectedGateway = "";
+let paymentMethods = [];
+
+async function fetchPaymentMethods() {
+  try {
+    const res = await fetch("http://localhost:3000/admin/payment-methods/public");
+    const data = await res.json();
+    if (res.ok && data.success) {
+      paymentMethods = data.methods;
+      renderPaymentOptions();
+    } else throw new Error(data.message || "Failed to fetch payment methods");
+  } catch (err) {
+    alert("❌ Failed to load payment methods");
+    console.error(err);
+  }
+}
+
+function renderPaymentOptions() {
+  const container = document.getElementById("paymentOptions");
+  container.innerHTML = "";
+  if (paymentMethods.length === 0) {
+    container.innerHTML = "<p>No payment methods available.</p>";
+    return;
+  }
+  const method = paymentMethods[0];
+  container.innerHTML = `
+    <div class="payment-option">
+      <h3>${method.name.toUpperCase()} PAYMENT</h3>
+      <button class="gold-btn" onclick="openDepositModal('${method.name}')">Pay now</button>
+    </div>
+  `;
+}
+
+function openDepositModal(gateway) {
+  selectedGateway = gateway;
+  document.getElementById("depositModal").style.display = "flex";
+}
+
+function closeModal() {
+  document.getElementById("depositModal").style.display = "none";
+  document.getElementById("paymentInfo").style.display = "none";
+}
+
+function showPaymentInfo() {
+  const amount = parseFloat(document.getElementById("depositAmount").value);
+  if (!amount || amount < 100) {
+    alert("Minimum deposit is 100 USD.");
+    return;
+  }
+
+  const method = paymentMethods.find(m => m.name.toLowerCase() === selectedGateway.toLowerCase());
+  if (!method) {
+    alert("❌ Payment method not found.");
+    return;
+  }
+
+  document.getElementById("depositModal").style.display = "none";
+  document.getElementById("paymentInfo").style.display = "block";
+
+  document.getElementById("gatewayName").innerText = method.name.toUpperCase();
+  document.getElementById("payAmount").innerText = amount.toFixed(2) + " USD";
+  document.getElementById("totalAmount").innerText = amount.toFixed(2) + " USD";
+
+  if (method.name.toLowerCase() === "btc" || method.name.toLowerCase() === "usdt") {
+    document.getElementById("cryptoInfo").style.display = "block";
+    document.getElementById("paypalInfo").style.display = "none";
+    document.getElementById("cryptoName").innerText = method.name || "Not set";
+    document.getElementById("cryptoAddress").innerText = method.address || "Not set";
+
+    if (method.qr) {
+      document.getElementById("cryptoQR").src = `/uploads/${method.qr}`;
+      document.getElementById("cryptoQR").style.display = "block";
+    } else {
+      document.getElementById("cryptoQR").style.display = "none";
+    }
+  } else if (method.name.toLowerCase() === "paypal") {
+    document.getElementById("cryptoInfo").style.display = "none";
+    document.getElementById("paypalInfo").style.display = "block";
+    document.getElementById("paypalName").innerText = method.name || "PayPal";
+    document.getElementById("paypalEmail").innerText = method.address || "Not set";
+  }
+}
+
+function previewReceipt() {
+  const file = document.getElementById("receiptFile").files[0];
+  const preview = document.getElementById("receiptPreview");
+  if (file) {
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = "block";
+  } else {
+    preview.style.display = "none";
+  }
+}
+
+async function submitDeposit() {
+  const amount = parseFloat(document.getElementById("depositAmount").value);
+  const receipt = document.getElementById("receiptFile").files[0];
+
+  if (!amount || amount < 100) {
+    alert("Enter a valid amount (min 100 USD).");
+    return;
+  }
+  if (!receipt) {
+    alert("Please upload payment receipt.");
+    return;
+  }
+
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("You must be logged in.");
+    window.location.href = "index.html";
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("amount", amount);
+  formData.append("method", selectedGateway);
+  formData.append("screenshot", receipt);
+
+  try {
+    const res = await fetch("http://localhost:3000/user/deposit", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert("✅ Deposit submitted successfully!");
+      window.location.href = "dashboard.html";
+    } else {
+      alert(data.message || "Deposit failed.");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("❌ Error connecting to server.");
+  }
+}
+
+function copyText(id) {
+  const el = document.getElementById(id);
+  navigator.clipboard.writeText(el.textContent).then(() => alert("Copied!"));
+}
+
+document.addEventListener("DOMContentLoaded", fetchPaymentMethods);
+</script>
+
+</body>
+</html>

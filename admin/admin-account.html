@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Payment Methods</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    body { font-family: Arial, sans-serif; background: #f9f9f9; padding: 20px; }
+    h1 { text-align: center; color: #333; margin-bottom: 30px; }
+    .method-container { max-width: 500px; margin: 0 auto 30px; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    label { display: block; margin: 10px 0 5px; font-weight: bold; }
+    input[type="text"], input[type="file"] { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 10px; box-sizing: border-box; }
+    img.qr-preview { max-width: 150px; margin-top: 10px; display: block; border: 1px solid #ccc; border-radius: 8px; }
+    button { padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; background: #f5b700; color: #fff; font-weight: bold; transition: 0.2s; margin-top: 10px; }
+    button:hover { background: #d99c00; }
+    .methods-list { max-width: 600px; margin: 20px auto; }
+    .methods-list div { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 10px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+    .methods-list button { background: #28a745; }
+    .methods-list button:hover { background: #218838; }
+  </style>
+</head>
+<body>
+
+<h1>Manage Payment Methods</h1>
+
+<div class="method-container">
+  <label for="methodName">Payment Method Name</label>
+  <input type="text" id="methodName" placeholder="e.g., BTC, USDT, PayPal">
+
+  <label for="walletAddress">Wallet Address / Email</label>
+  <input type="text" id="walletAddress" placeholder="Enter wallet address or PayPal email">
+
+  <label for="qrUpload">Upload QR Code (optional)</label>
+  <input type="file" id="qrUpload" accept="image/*">
+  <img id="qrPreview" class="qr-preview" style="display:none;">
+
+  <button onclick="saveMethod()">Save Payment Method</button>
+</div>
+
+<h2 style="text-align:center;">Current Payment Methods</h2>
+<div class="methods-list" id="methodsList">
+  <!-- dynamically loaded -->
+</div>
+
+<script>
+  let paymentMethods = [];
+
+  // -----------------------------
+  // Load existing methods
+  // -----------------------------
+  async function loadMethods() {
+    try {
+      const res = await fetch('http://localhost:3000/admin/payment-methods');
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || 'Failed to fetch methods');
+      paymentMethods = data.methods || [];
+      renderMethods();
+    } catch (err) {
+      console.error(err);
+      alert('❌ Error loading payment methods');
+    }
+  }
+
+  function renderMethods() {
+    const container = document.getElementById('methodsList');
+    container.innerHTML = '';
+    paymentMethods.forEach(m => {
+      container.innerHTML += `
+        <div>
+          <span>${m.name}: ${m.address}</span>
+          ${m.qr ? `<img src="/uploads/${m.qr}" style="height:40px; border-radius:4px;">` : ''}
+          <button onclick="copyAddress('${m.address}')">Copy</button>
+        </div>
+      `;
+    });
+  }
+
+  // -----------------------------
+  // Preview QR
+  // -----------------------------
+  document.getElementById('qrUpload').addEventListener('change', function() {
+    const file = this.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('qrPreview').src = e.target.result;
+        document.getElementById('qrPreview').style.display = 'block';
+      }
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // -----------------------------
+  // Save payment method
+  // -----------------------------
+  async function saveMethod() {
+    const name = document.getElementById('methodName').value.trim();
+    const address = document.getElementById('walletAddress').value.trim();
+    const fileInput = document.getElementById('qrUpload');
+
+    if (!name || !address) return alert('Name and address are required');
+
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('address', address);
+    if (fileInput.files[0]) formData.append('qr', fileInput.files[0]);
+
+    try {
+      const res = await fetch('http://localhost:3000/admin/payment-methods', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || 'Failed to save method');
+
+      alert('✅ Payment method saved!');
+      document.getElementById('methodName').value = '';
+      document.getElementById('walletAddress').value = '';
+      document.getElementById('qrUpload').value = '';
+      document.getElementById('qrPreview').style.display = 'none';
+      loadMethods();
+    } catch (err) {
+      console.error(err);
+      alert('❌ Error saving method');
+    }
+  }
+
+  // -----------------------------
+  // Copy address to clipboard
+  // -----------------------------
+  function copyAddress(addr) {
+    navigator.clipboard.writeText(addr);
+    alert('Copied to clipboard!');
+  }
+
+  // Load methods on page load
+  loadMethods();
+</script>
+
+</body>
+</html>

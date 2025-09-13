@@ -1,0 +1,188 @@
+{
+  "users": [
+    {
+      "id": "admin001",
+      "name": "Admin",
+      "email": "olaoluwa705@gmail.com",
+      "password": "$2b$10$u7qZ0IFbMT9OqfPKhJcqTeGvFf3ZcG4v6P4MQx0L4bEICp6l5wz1O",
+      "balance": 0,
+      "totalDeposit": 0,
+      "totalWithdraw": 0,
+      "totalInvest": 0,
+      "currentInvest": 0
+    },
+    {
+      "id": "admin002",
+      "name": "Admin",
+      "email": "Info.myharvestine@gmail.com",
+      "password": "$2b$10$u7qZ0IFbMT9OqfPKhJcqTeGvFf3ZcG4v6P4MQx0L4bEICp6l5wz1O",
+      "balance": 0,
+      "totalDeposit": 0,
+      "totalWithdraw": 0,
+      "totalInvest": 0,
+      "currentInvest": 0
+    },
+    {
+      "id": "1757568211966",
+      "name": "olaoluwaniko",
+      "email": "olaoluwaniko@gmail.com",
+      "password": "$2b$10$DiHdfhppEXiFch4k4x8bJODMA1WxaYh0GeJFNwOGo.NBzac3tLd9m",
+      "balance": 0,
+      "totalDeposit": 0,
+      "totalWithdraw": 0,
+      "totalInvest": 2200,
+      "currentInvest": 2200
+    },
+    {
+      "id": "1757592604704",
+      "name": "whoknows",
+      "email": "whoknows@gmail.com",
+      "password": "$2b$10$5Ar4zjiSnEj/kekMrNEc0uaaQWH/9nicBJvwezhh9UKIK5FMNtM0K",
+      "balance": 0,
+      "totalDeposit": 0,
+      "totalWithdraw": 0,
+      "totalInvest": 0,
+      "currentInvest": 0
+    },
+    {
+      "id": "1757594498577",
+      "name": "olaoluwanishola",
+      "email": "olaoluwanishola@gmail.com",
+      "password": "$2b$10$b96c7N.iIFa9qb.r8W/jx.DjdhRFtHWS/35kMJ4VLG5iIb/BShyFO",
+      "balance": 0,
+      "totalDeposit": 0,
+      "totalWithdraw": 0,
+      "totalInvest": 0,
+      "currentInvest": 0
+    },
+    {
+      "id": "1757700273565",
+      "name": "shola",
+      "email": "shola@gmail.com",
+      "password": "$2b$10$nryjVLmyaG878nsDzWeEuOOKDzug2paxAAVL.t..2lEwOFmEB1gIO",
+      "balance": 99944300,
+      "totalDeposit": 0,
+      "totalWithdraw": 15700,
+      "totalInvest": 40000,
+      "currentInvest": 40000
+    },
+    {
+      "id": "1757743555746",
+      "name": "tt",
+      "email": "tt@gmail.com",
+      "password": "$2b$10$.cfWYLP4gUERNLXCarT6cO.wmjWb2Dfj9bxESGeZIM8s3spdkEiM2",
+      "balance": 0,
+      "totalDeposit": 0,
+      "totalWithdraw": 0,
+      "totalInvest": 0,
+      "currentInvest": 0
+    }
+  ],
+  "deposits": [
+    {
+      "id": "1757596482828",
+      "userId": "1757568211966",
+      "amount": 1000,
+      "method": "BTC",
+      "status": "pending",
+      "screenshot": "1757596482794-1000832891.jpg",
+      "wallet": "",
+      "approved": true
+    },
+    {
+      "id": "1757628386503",
+      "userId": "1757568211966",
+      "amount": 100,
+      "method": "BTC",
+      "status": "pending",
+      "screenshot": "1757628386424-1000836912.jpg",
+      "wallet": "",
+      "approved": true
+    },
+    {
+      "id": "1757696148609",
+      "userId": "1757568211966",
+      "amount": 100,
+      "method": "BTC",
+      "status": "pending",
+      "screenshot": "1757696148574-1000837864.jpg",
+      "wallet": "",
+      "approved": true
+    },
+    {
+      "id": "1757698351268",
+      "userId": "1757568211966",
+      "amount": 1000,
+      "method": "BTC",
+      "status": "pending",
+      "screenshot": "1757698351156-1000832944.jpg",
+      "wallet": "",
+      "approved": true
+    },
+    {
+      "id": "1757700298342",
+      "userId": "1757700273565",
+      "amount": 100000000,
+      "method": "BTC",
+      "status": "pending",
+      "screenshot": "1757700298288-1000837182.jpg",
+      "wallet": "",
+      "approved": true
+    }
+  ],
+  "paymentMethods": [
+    {
+      "id": "1757688101421",
+      "name": "BTC",
+      "address": "D9u2UM6ykkE7ocwWe3RbkJFGG1zhMAa1XP",
+      "qr": "1757688101328-1000837183.png"
+    }
+  ],
+  "withdrawals": [
+    {
+      "id": "1757743292574",
+      "userId": "1757700273565",
+      "amount": 150,
+      "method": "USDT",
+      "address": "Bababahahahah",
+      "status": "pending",
+      "createdAt": "2025-09-13T06:01:32.574Z"
+    },
+    {
+      "id": "1757743307620",
+      "userId": "1757700273565",
+      "amount": 15000,
+      "method": "BTC",
+      "address": "Babahahah",
+      "status": "pending",
+      "createdAt": "2025-09-13T06:01:47.620Z"
+    },
+    {
+      "id": "1757743432290",
+      "userId": "1757700273565",
+      "amount": 200,
+      "method": "BTC",
+      "address": "Bshshahsh",
+      "status": "pending",
+      "createdAt": "2025-09-13T06:03:52.292Z"
+    },
+    {
+      "id": "1757743878388",
+      "userId": "1757700273565",
+      "amount": 200,
+      "method": "BTC",
+      "address": "+*+$-*($(*",
+      "status": "pending",
+      "createdAt": "2025-09-13T06:11:18.388Z"
+    },
+    {
+      "id": "1757743975166",
+      "userId": "1757700273565",
+      "amount": 150,
+      "method": "BTC",
+      "address": "Gshsjshdgegehehbe",
+      "status": "pending",
+      "createdAt": "2025-09-13T06:12:55.173Z"
+    }
+  ]
+}
