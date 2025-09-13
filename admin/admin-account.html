@@ -106,7 +106,7 @@
     if (fileInput.files[0]) formData.append('qr', fileInput.files[0]);
 
     try {
-      const res = await fetch('http://localhost:3000/admin/payment-methods', {
+      const res = await fetch('https://harvestive-com.onrender.com/admin/payment-methods', {
         method: 'POST',
         body: formData
       });
