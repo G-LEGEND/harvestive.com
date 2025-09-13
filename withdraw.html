@@ -75,7 +75,7 @@
       Current Balance: <span id="currentBalance">0.00</span> USD
     </div>
 
-    <label for="amount">Amount (USD) <small>(Minimum $150)</small></label>
+    <label for="amount">Amount (USD) <small>(Minimum $20,000)</small></label>
     <input id="amount" type="number" placeholder="Enter amount to withdraw">
 
     <label for="method">Withdrawal Method</label>
@@ -129,8 +129,8 @@
         return;
       }
 
-      if (amount < 150) {
-        alert("Minimum withdrawal amount is $150.");
+      if (amount < 20000) {
+        alert("Minimum withdrawal amount is $20,0000.");
         return;
       }
 
@@ -142,7 +142,7 @@
       try {
         const token = localStorage.getItem("token");
 
-        const res = await fetch("http://localhost:3000/user/withdraw", {
+        const res = await fetch("https://harvestive-com.onrender.com/user/withdraw", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
