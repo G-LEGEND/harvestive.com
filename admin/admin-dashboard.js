@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadAdminData() {
   const token = localStorage.getItem('token');
   try {
-    const res = await fetch('http://localhost:8158/admin/dashboard', {
+    const res = await fetch('https://harvestive-com.onrender.com/admin/dashboard', {
       headers: { Authorization: 'Bearer ' + token }
     });
     const data = await res.json();

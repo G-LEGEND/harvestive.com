@@ -50,7 +50,7 @@
   // -----------------------------
   async function loadMethods() {
     try {
-      const res = await fetch('http://localhost:3000/admin/payment-methods');
+      const res = await fetch('https://harvestive-com.onrender.com/admin/payment-methods');
       const data = await res.json();
       if (!data.success) throw new Error(data.message || 'Failed to fetch methods');
       paymentMethods = data.methods || [];

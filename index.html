@@ -34,7 +34,7 @@
       if(!email || !password) return alert("Please enter email and password");
 
       try {
-        const res = await fetch("http://localhost:3000/auth/login", {
+        const res = await fetch("https://harvestive-com.onrender.com/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password })

@@ -197,7 +197,7 @@
       if (!token) return alert('Login required');
 
       try {
-        const res = await fetch('http://localhost:3000/user/invest', {
+        const res = await fetch('https://harvestive-com.onrender.com/user/invest', {
           method: 'POST',
           headers: {
             'Authorization': 'Bearer ' + token,

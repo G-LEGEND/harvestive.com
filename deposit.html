@@ -203,7 +203,7 @@ let paymentMethods = [];
 
 async function fetchPaymentMethods() {
   try {
-    const res = await fetch("http://localhost:3000/admin/payment-methods/public");
+    const res = await fetch("https://harvestive-com.onrender.com/admin/payment-methods/public");
     const data = await res.json();
     if (res.ok && data.success) {
       paymentMethods = data.methods;
