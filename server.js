@@ -1,54 +1,54 @@
 const express = require('express');
-const cors = require('cors');
-const multer = require('multer');
-const { Low } = require('lowdb');
-const { JSONFile } = require('lowdb/node'); // LowDB v3+
 const path = require('path');
 const fs = require('fs');
+const multer = require('multer');
+const { Low, JSONFile } = require('lowdb');
 
-async function main() {
-  // Default data
-  const defaultData = { 
-    users: [], 
-    deposits: [], 
-    admin: { btcAddress: '', btcQR: '', paypal: '' } 
-  };
+// Setup Express app
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-  // Setup LowDB
-  const adapter = new JSONFile('db.json');
-  const db = new Low(adapter, defaultData); // Pass default data here
-  await db.read();
-  await db.write();
+// Setup JSON DB
+const file = path.join(__dirname, 'db.json');
+const adapter = new JSONFile(file);
+const db = new Low(adapter);
 
-  // Create uploads folder if it doesn't exist
-  const uploadDir = path.join(__dirname, 'uploads');
-  if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+// Setup multer for file uploads
+const upload = multer({ dest: path.join(__dirname, 'uploads') });
 
-  // Multer setup for screenshot uploads
-  const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, 'uploads/'),
-    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
-  });
-  const upload = multer({ storage });
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-  // Initialize Express
-  const app = express();
-  app.use(cors());
-  app.use(express.json());
-  app.use('/uploads', express.static(uploadDir));
+// ✅ Serve static files from all folders
+app.use(express.static(__dirname));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-  // Import routes
-  const authRoutes = require('./routes/auth');
-  const userRoutes = require('./routes/user');
-  const adminRoutes = require('./routes/admin');
+// ✅ Serve homepage by default
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
-  app.use('/auth', authRoutes(db));
-  app.use('/user', userRoutes(db, upload));
-  app.use('/admin', adminRoutes(db));
+// ✅ Optional: fallback for undefined routes
+app.use((req, res, next) => {
+  if (req.path.endsWith('.html')) {
+    res.status(404).send('HTML page not found');
+  } else {
+    next();
+  }
+});
 
-  // Start server
-  app.listen(3000, () => console.log('Server running on http://localhost:3000'));
-}
+// ✅ Import routes
+const userRoutes = require('./routes/user')(db, upload);
+const authRoutes = require('./routes/auth')(db);
+const adminRoutes = require('./routes/admin')(db, upload);
 
-// Run the async main function
-main();
+// ✅ Use routes
+app.use('/user', userRoutes);
+app.use('/auth', authRoutes);
+app.use('/admin', adminRoutes);
+
+// ✅ Start server
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
