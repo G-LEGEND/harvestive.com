@@ -1,79 +1,77 @@
 const express = require('express');
+const cors = require('cors');
+const multer = require('multer');
+const { Low } = require('lowdb');
+const { JSONFile } = require('lowdb/node'); // LowDB v3+
 const path = require('path');
 const fs = require('fs');
-const multer = require('multer');
-const { Low, JSONFile } = require('lowdb');
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+async function main() {
+  // Default DB structure
+  const defaultData = { 
+    users: [], 
+    deposits: [], 
+    admin: { btcAddress: '', btcQR: '', paypal: '' } 
+  };
 
-const dbFile = path.join(__dirname, 'db.json');
-const uploadsDir = path.join(__dirname, 'uploads');
+  // Setup DB
+  const adapter = new JSONFile('db.json');
+  const db = new Low(adapter, defaultData);
+  await db.read();
+  await db.write();
 
-const adapter = new JSONFile(dbFile);
-const db = new Low(adapter);
+  // Create uploads/ folder if missing
+  const uploadDir = path.join(__dirname, 'uploads');
+  if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 
-// Make sure uploads folder exists
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+  // Setup Multer
+  const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, 'uploads/'),
+    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+  });
+  const upload = multer({ storage });
 
-const upload = multer({ dest: uploadsDir });
+  // Init Express
+  const app = express();
+  const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+  app.use(cors());
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
 
-// Serve static files including html, css, admin folder
-app.use(express.static(__dirname));
-app.use('/uploads', express.static(uploadsDir));
+  // Static file handling (CSS, HTML, uploads, etc.)
+  app.use(express.static(__dirname));
+  app.use('/uploads', express.static(uploadDir));
 
-// Serve homepage
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
+  // Serve homepage
+  app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+  });
 
-// Optional fallback for missing html
-app.get('/*.html', (req, res, next) => {
-  const filePath = path.join(__dirname, req.path);
-  fs.access(filePath, fs.constants.F_OK, err => {
-    if (err) {
-      // file doesn't exist
-      res.status(404).send('Page not found');
-    } else {
+  // Serve HTML files directly (including /admin pages)
+  app.get('/*.html', (req, res) => {
+    const filePath = path.join(__dirname, req.path);
+    if (fs.existsSync(filePath)) {
       res.sendFile(filePath);
+    } else {
+      res.status(404).send('Page not found');
     }
   });
-});
 
-// Load routes only after db read
-db.read().then(() => {
-  // If route files exist
-  try {
-    const userRoutes = require('./routes/user')(db, upload);
-    app.use('/user', userRoutes);
-  } catch (e) {
-    console.error('Error loading user routes:', e);
-  }
+  // Load routes
+  const authRoutes = require('./routes/auth');
+  const userRoutes = require('./routes/user');
+  const adminRoutes = require('./routes/admin');
 
-  try {
-    const authRoutes = require('./routes/auth')(db);
-    app.use('/auth', authRoutes);
-  } catch (e) {
-    console.error('Error loading auth routes:', e);
-  }
+  app.use('/auth', authRoutes(db));
+  app.use('/user', userRoutes(db, upload));
+  app.use('/admin', adminRoutes(db, upload));
 
-  try {
-    const adminRoutes = require('./routes/admin')(db, upload);
-    app.use('/admin', adminRoutes);
-  } catch (e) {
-    console.error('Error loading admin routes:', e);
-  }
-
-  // Start server
+  // Start the server
   app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
   });
-}).catch(err => {
-  console.error('Error reading DB:', err);
-  process.exit(1);
-});
+}
+
+// Run everything
+main();
