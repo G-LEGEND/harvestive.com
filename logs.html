@@ -3,138 +3,205 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Logs - Harvestive</title>
+<title>My Account History - Harvestive</title>
 <style>
-  body { font-family: Arial, sans-serif; background:#fff; color:#333; margin:0; padding:0; }
-  header { background:#d4af37; color:#fff; padding:20px; text-align:center; }
-  h1 { margin:0; }
-  main { padding:20px; }
-  .log-section { margin-bottom:40px; }
-  .log-section h2 { color:#d4af37; border-bottom:2px solid #d4af37; padding-bottom:5px; }
-  table { width:100%; border-collapse:collapse; margin-top:10px; }
-  thead th { background:#d4af37; color:#fff; padding:10px; text-align:left; }
-  tbody td { border-bottom:1px solid #ccc; padding:10px; }
-  tr:nth-child(even) { background:#fef9f0; }
-  .receipt { max-width:80px; border:1px solid #d4af37; border-radius:5px; }
-  .error { color:red; text-align:center; margin-top:20px; }
+  body {
+    font-family: Arial, sans-serif;
+    background: #fff;
+    color: #333;
+    margin: 0;
+    padding: 0;
+  }
+
+  header {
+    background: #d4af37;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+  }
+
+  h1 { margin: 0; font-size: 24px; }
+
+  main { padding: 15px; max-width: 1000px; margin: auto; }
+
+  .filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 20px;
+    gap: 10px;
+  }
+
+  .filter-buttons button {
+    background: #d4af37;
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+    flex: 1 1 120px;
+  }
+
+  .filter-buttons button:hover {
+    background: #b38b2f;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    display: none; /* hide initially */
+    overflow-x: auto;
+  }
+
+  thead th {
+    background: #d4af37;
+    color: #fff;
+    padding: 10px;
+    text-align: left;
+  }
+
+  tbody td {
+    border-bottom: 1px solid #ccc;
+    padding: 8px;
+    word-break: break-word;
+  }
+
+  tr:nth-child(even) { background: #fef9f0; }
+
+  .receipt { max-width: 80px; border: 1px solid #d4af37; border-radius: 5px; }
+
+  .error { color: red; text-align: center; margin-top: 20px; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    thead th, tbody td { font-size: 14px; padding: 6px; }
+    .filter-buttons button { flex: 1 1 100%; }
+  }
+
 </style>
 </head>
 <body>
 <header>
-  <h1>My Account Logs</h1>
+  <h1>My Account History</h1>
 </header>
 
 <main>
-  <section class="log-section">
-    <h2>Deposits</h2>
-    <table id="deposits-table">
-      <thead>
-        <tr>
-          <th>ID</th><th>Amount (USD)</th><th>Method</th><th>Status</th><th>Screenshot</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </section>
-
-  <section class="log-section">
-    <h2>Withdrawals</h2>
-    <table id="withdrawals-table">
-      <thead>
-        <tr>
-          <th>ID</th><th>Amount (USD)</th><th>Method</th><th>Address</th><th>Status</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </section>
-
-  <section class="log-section">
-    <h2>Investments</h2>
-    <table id="investments-table">
-      <thead>
-        <tr>
-          <th>ID</th><th>Amount (USD)</th><th>Date</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </section>
+  <div class="filter-buttons">
+    <button onclick="showTable('deposits')">Deposits</button>
+    <button onclick="showTable('withdrawals')">Withdrawals</button>
+    <button onclick="showTable('investments')">Investments</button>
+  </div>
 
   <p class="error" id="errorMsg"></p>
+
+  <!-- Deposits Table -->
+  <table id="deposits-table">
+    <thead>
+      <tr>
+        <th>ID</th><th>Amount (USD)</th><th>Method</th><th>Status</th><th>Screenshot</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- Withdrawals Table -->
+  <table id="withdrawals-table">
+    <thead>
+      <tr>
+        <th>ID</th><th>Amount (USD)</th><th>Method</th><th>Address</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- Investments Table -->
+  <table id="investments-table">
+    <thead>
+      <tr>
+        <th>ID</th><th>Amount (USD)</th><th>Date</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 </main>
 
 <script>
-(async function loadLogs() {
+async function loadHistory() {
   const token = localStorage.getItem('token');
   const errorEl = document.getElementById('errorMsg');
   errorEl.textContent = '';
 
   if (!token) {
-    errorEl.textContent = 'You must log in first';
+    errorEl.textContent = '⚠️ You must log in first';
     return;
   }
 
   try {
-    const res = await fetch('https://harvestive-com.onrender.com/user/logs', {
-      headers: { 'Authorization': `Bearer ${token}` }
+    const res = await fetch('https://harvestive-com.onrender.com/user/dashboard', {
+      headers: { Authorization: 'Bearer ' + token }
     });
+    const data = await res.json();
 
-    const text = await res.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      throw new Error('Server returned HTML instead of JSON. Check backend URL or server.');
-    }
+    if (!res.ok || !data.success) throw new Error(data.message || 'Failed to load history');
 
-    if (!data.success) throw new Error(data.message || 'Error loading logs');
+    // Safely default to empty arrays
+    const deposits = data.deposits || [];
+    const withdrawals = data.withdrawals || [];
+    const investments = data.investments || [];
 
-    // Deposits
+    // Populate deposits
     const depositsBody = document.querySelector('#deposits-table tbody');
-    depositsBody.innerHTML = '';
-    data.deposits.forEach(d => {
-      depositsBody.innerHTML += `
-        <tr>
-          <td>${d.id}</td>
-          <td>${d.amount.toLocaleString()}</td>
-          <td>${d.method}</td>
-          <td>${d.status}</td>
-          <td>${d.screenshot ? `<img src="/uploads/${d.screenshot}" class="receipt">` : '-'}</td>
-        </tr>`;
-    });
+    depositsBody.innerHTML = deposits.length ? deposits.map(d => `
+      <tr>
+        <td>${d.id}</td>
+        <td>${d.amount.toLocaleString()}</td>
+        <td>${d.method}</td>
+        <td>${d.status}</td>
+        <td>${d.screenshot ? `<img src="/uploads/${d.screenshot}" class="receipt">` : '-'}</td>
+      </tr>
+    `).join('') : `<tr><td colspan="5" style="text-align:center;">No deposits yet</td></tr>`;
 
-    // Withdrawals
+    // Populate withdrawals
     const withdrawalsBody = document.querySelector('#withdrawals-table tbody');
-    withdrawalsBody.innerHTML = '';
-    data.withdrawals.forEach(w => {
-      withdrawalsBody.innerHTML += `
-        <tr>
-          <td>${w.id}</td>
-          <td>${w.amount.toLocaleString()}</td>
-          <td>${w.method}</td>
-          <td>${w.address}</td>
-          <td>${w.status}</td>
-        </tr>`;
-    });
+    withdrawalsBody.innerHTML = withdrawals.length ? withdrawals.map(w => `
+      <tr>
+        <td>${w.id}</td>
+        <td>${w.amount.toLocaleString()}</td>
+        <td>${w.method}</td>
+        <td>${w.address}</td>
+        <td>${w.status}</td>
+      </tr>
+    `).join('') : `<tr><td colspan="5" style="text-align:center;">No withdrawals yet</td></tr>`;
 
-    // Investments
+    // Populate investments
     const investBody = document.querySelector('#investments-table tbody');
-    investBody.innerHTML = '';
-    data.investments.forEach(i => {
-      investBody.innerHTML += `
-        <tr>
-          <td>${i.id}</td>
-          <td>${i.amount.toLocaleString()}</td>
-          <td>${new Date(i.createdAt).toLocaleString()}</td>
-        </tr>`;
-    });
+    investBody.innerHTML = investments.length ? investments.map(i => `
+      <tr>
+        <td>${i.id}</td>
+        <td>${i.amount.toLocaleString()}</td>
+        <td>${new Date(i.createdAt).toLocaleString()}</td>
+      </tr>
+    `).join('') : `<tr><td colspan="3" style="text-align:center;">No investments yet</td></tr>`;
 
   } catch (err) {
     console.error(err);
     errorEl.textContent = err.message;
   }
-})();
+}
+
+// Show only selected table
+function showTable(type) {
+  const tables = ['deposits-table', 'withdrawals-table', 'investments-table'];
+  tables.forEach(id => {
+    document.getElementById(id).style.display = (id === type + '-table') ? 'table' : 'none';
+  });
+}
+
+// Auto-load history
+document.addEventListener('DOMContentLoaded', loadHistory);
 </script>
 </body>
 </html>
