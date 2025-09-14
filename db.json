@@ -128,6 +128,15 @@
       "screenshot": "1757700298288-1000837182.jpg",
       "wallet": "",
       "approved": true
+    },
+    {
+      "id": "1757812648620",
+      "userId": "1757568211966",
+      "amount": 100,
+      "method": "BTC",
+      "status": "pending",
+      "screenshot": "1757812648601-1000841548.jpg",
+      "wallet": ""
     }
   ],
   "paymentMethods": [
@@ -184,5 +193,6 @@
       "status": "pending",
       "createdAt": "2025-09-13T06:12:55.173Z"
     }
-  ]
+  ],
+  "investments": []
 }

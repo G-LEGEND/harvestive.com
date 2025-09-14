@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Transaction Logs</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding-bottom: 70px;
+      background: #f5f5f5;
+    }
+
+    .logs-container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: #eee;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .tab-btn.active {
+      background: gold;
+      color: black;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    table th, table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    table th {
+      background: #f0f0f0;
+    }
+
+    .status-pending { color: orange; font-weight: bold; }
+    .status-approved { color: green; font-weight: bold; }
+    .status-rejected { color: red; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="logs-container">
+    <h2>Transaction Logs</h2>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showTab('deposits', this)">Deposits</button>
+      <button class="tab-btn" onclick="showTab('withdrawals', this)">Withdrawals</button>
+      <button class="tab-btn" onclick="showTab('investments', this)">Investments</button>
+    </div>
+
+    <div id="deposits" class="tab-content">
+      <h3>Deposit Logs</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Amount (USD)</th>
+            <th>Method</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="depositLogs"><tr><td colspan="3">Loading...</td></tr></tbody>
+      </table>
+    </div>
+
+    <div id="withdrawals" class="tab-content" style="display:none;">
+      <h3>Withdrawal Logs</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Amount (USD)</th>
+            <th>Method</th>
+            <th>Address</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="withdrawLogs"><tr><td colspan="4">Loading...</td></tr></tbody>
+      </table>
+    </div>
+
+    <div id="investments" class="tab-content" style="display:none;">
+      <h3>Investment Logs</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Amount (USD)</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="investLogs"><tr><td colspan="2">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="deposit.html"><i class="fas fa-wallet"></i><br>Deposit</a>
+    <a href="invest.html"><i class="fas fa-piggy-bank"></i><br>My invest</a>
+    <a href="dashboard.html"><i class="fas fa-home"></i><br>Home</a>
+    <a href="withdraw.html"><i class="fas fa-money-bill"></i><br>Withdraw</a>
+    <a href="logs.html" class="active"><i class="fas fa-list"></i><br>Logs</a>
+  </div>
+
+  <script>
+    function showTab(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(div => div.style.display = 'none');
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(tabId).style.display = 'block';
+      btn.classList.add('active');
+    }
+
+    async function loadLogs() {
+      const token = localStorage.getItem("token");
+      if (!token) return window.location.href = "index.html";
+
+      try {
+        const res = await fetch("https://harvestive-com.onrender.com/user/logs", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) throw new Error(data.message || "Failed to load logs");
+
+        // Deposits
+        const deposits = data.deposits || [];
+        document.getElementById("depositLogs").innerHTML = deposits.length
+          ? deposits.map(d => `
+            <tr>
+              <td>${Number(d.amount).toFixed(2)}</td>
+              <td>${d.method || "N/A"}</td>
+              <td class="status-${d.status}">${d.status}</td>
+            </tr>
+          `).join("")
+          : "<tr><td colspan='3'>No deposits found</td></tr>";
+
+        // Withdrawals
+        const withdrawals = data.withdrawals || [];
+        document.getElementById("withdrawLogs").innerHTML = withdrawals.length
+          ? withdrawals.map(w => `
+            <tr>
+              <td>${Number(w.amount).toFixed(2)}</td>
+              <td>${w.method || "N/A"}</td>
+              <td>${w.address || "N/A"}</td>
+              <td class="status-${w.status}">${w.status}</td>
+            </tr>
+          `).join("")
+          : "<tr><td colspan='4'>No withdrawals found</td></tr>";
+
+        // Investments
+        const investments = data.investments || [];
+        document.getElementById("investLogs").innerHTML = investments.length
+          ? investments.map(i => `
+            <tr>
+              <td>${Number(i.amount).toFixed(2)}</td>
+              <td>${i.date ? new Date(i.date).toLocaleDateString() : "N/A"}</td>
+            </tr>
+          `).join("")
+          : "<tr><td colspan='2'>No investments found</td></tr>";
+
+      } catch (err) {
+        console.error(err);
+        alert("Error loading logs. Please login again.");
+        localStorage.removeItem("token");
+        window.location.href = "index.html";
+      }
+    }
+
+    window.onload = loadLogs;
+  </script>
+</body>
+</html>
