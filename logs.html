@@ -1,200 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Transaction Logs</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding-bottom: 70px;
-      background: #f5f5f5;
-    }
-
-    .logs-container {
-      max-width: 800px;
-      margin: 20px auto;
-      padding: 20px;
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .tabs {
-      display: flex;
-      justify-content: space-around;
-      margin-bottom: 20px;
-    }
-
-    .tab-btn {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      background: #eee;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .tab-btn.active {
-      background: gold;
-      color: black;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 20px;
-    }
-
-    table th, table td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      font-size: 14px;
-      text-align: center;
-    }
-
-    table th {
-      background: #f0f0f0;
-    }
-
-    .status-pending { color: orange; font-weight: bold; }
-    .status-approved { color: green; font-weight: bold; }
-    .status-rejected { color: red; font-weight: bold; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Logs - Harvestive</title>
+<style>
+  body { font-family: Arial, sans-serif; background:#fff; color:#333; margin:0; padding:0; }
+  header { background:#d4af37; color:#fff; padding:20px; text-align:center; }
+  h1 { margin:0; }
+  main { padding:20px; }
+  .log-section { margin-bottom:40px; }
+  .log-section h2 { color:#d4af37; border-bottom:2px solid #d4af37; padding-bottom:5px; }
+  table { width:100%; border-collapse:collapse; margin-top:10px; }
+  thead th { background:#d4af37; color:#fff; padding:10px; text-align:left; }
+  tbody td { border-bottom:1px solid #ccc; padding:10px; }
+  tr:nth-child(even) { background:#fef9f0; }
+  .receipt { max-width:80px; border:1px solid #d4af37; border-radius:5px; }
+  .error { color:red; text-align:center; margin-top:20px; }
+</style>
 </head>
 <body>
-  <div class="logs-container">
-    <h2>Transaction Logs</h2>
+<header>
+  <h1>My Account Logs</h1>
+</header>
 
-    <div class="tabs">
-      <button class="tab-btn active" onclick="showTab('deposits', this)">Deposits</button>
-      <button class="tab-btn" onclick="showTab('withdrawals', this)">Withdrawals</button>
-      <button class="tab-btn" onclick="showTab('investments', this)">Investments</button>
-    </div>
+<main>
+  <section class="log-section">
+    <h2>Deposits</h2>
+    <table id="deposits-table">
+      <thead>
+        <tr>
+          <th>ID</th><th>Amount (USD)</th><th>Method</th><th>Status</th><th>Screenshot</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
 
-    <div id="deposits" class="tab-content">
-      <h3>Deposit Logs</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Amount (USD)</th>
-            <th>Method</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="depositLogs"><tr><td colspan="3">Loading...</td></tr></tbody>
-      </table>
-    </div>
+  <section class="log-section">
+    <h2>Withdrawals</h2>
+    <table id="withdrawals-table">
+      <thead>
+        <tr>
+          <th>ID</th><th>Amount (USD)</th><th>Method</th><th>Address</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
 
-    <div id="withdrawals" class="tab-content" style="display:none;">
-      <h3>Withdrawal Logs</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Amount (USD)</th>
-            <th>Method</th>
-            <th>Address</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="withdrawLogs"><tr><td colspan="4">Loading...</td></tr></tbody>
-      </table>
-    </div>
+  <section class="log-section">
+    <h2>Investments</h2>
+    <table id="investments-table">
+      <thead>
+        <tr>
+          <th>ID</th><th>Amount (USD)</th><th>Date</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
 
-    <div id="investments" class="tab-content" style="display:none;">
-      <h3>Investment Logs</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Amount (USD)</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody id="investLogs"><tr><td colspan="2">Loading...</td></tr></tbody>
-      </table>
-    </div>
-  </div>
+  <p class="error" id="errorMsg"></p>
+</main>
 
-  <div class="bottom-nav">
-    <a href="deposit.html"><i class="fas fa-wallet"></i><br>Deposit</a>
-    <a href="invest.html"><i class="fas fa-piggy-bank"></i><br>My invest</a>
-    <a href="dashboard.html"><i class="fas fa-home"></i><br>Home</a>
-    <a href="withdraw.html"><i class="fas fa-money-bill"></i><br>Withdraw</a>
-    <a href="logs.html" class="active"><i class="fas fa-list"></i><br>Logs</a>
-  </div>
+<script>
+(async function loadLogs() {
+  const token = localStorage.getItem('token');
+  const errorEl = document.getElementById('errorMsg');
+  errorEl.textContent = '';
 
-  <script>
-    function showTab(tabId, btn) {
-      document.querySelectorAll('.tab-content').forEach(div => div.style.display = 'none');
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById(tabId).style.display = 'block';
-      btn.classList.add('active');
+  if (!token) {
+    errorEl.textContent = 'You must log in first';
+    return;
+  }
+
+  try {
+    const res = await fetch('https://harvestive-com.onrender.com/user/logs', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error('Server returned HTML instead of JSON. Check backend URL or server.');
     }
 
-    async function loadLogs() {
-      const token = localStorage.getItem("token");
-      if (!token) return window.location.href = "index.html";
+    if (!data.success) throw new Error(data.message || 'Error loading logs');
 
-      try {
-        const res = await fetch("https://harvestive-com.onrender.com/user/logs", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const data = await res.json();
+    // Deposits
+    const depositsBody = document.querySelector('#deposits-table tbody');
+    depositsBody.innerHTML = '';
+    data.deposits.forEach(d => {
+      depositsBody.innerHTML += `
+        <tr>
+          <td>${d.id}</td>
+          <td>${d.amount.toLocaleString()}</td>
+          <td>${d.method}</td>
+          <td>${d.status}</td>
+          <td>${d.screenshot ? `<img src="/uploads/${d.screenshot}" class="receipt">` : '-'}</td>
+        </tr>`;
+    });
 
-        if (!res.ok || !data.success) throw new Error(data.message || "Failed to load logs");
+    // Withdrawals
+    const withdrawalsBody = document.querySelector('#withdrawals-table tbody');
+    withdrawalsBody.innerHTML = '';
+    data.withdrawals.forEach(w => {
+      withdrawalsBody.innerHTML += `
+        <tr>
+          <td>${w.id}</td>
+          <td>${w.amount.toLocaleString()}</td>
+          <td>${w.method}</td>
+          <td>${w.address}</td>
+          <td>${w.status}</td>
+        </tr>`;
+    });
 
-        // Deposits
-        const deposits = data.deposits || [];
-        document.getElementById("depositLogs").innerHTML = deposits.length
-          ? deposits.map(d => `
-            <tr>
-              <td>${Number(d.amount).toFixed(2)}</td>
-              <td>${d.method || "N/A"}</td>
-              <td class="status-${d.status}">${d.status}</td>
-            </tr>
-          `).join("")
-          : "<tr><td colspan='3'>No deposits found</td></tr>";
+    // Investments
+    const investBody = document.querySelector('#investments-table tbody');
+    investBody.innerHTML = '';
+    data.investments.forEach(i => {
+      investBody.innerHTML += `
+        <tr>
+          <td>${i.id}</td>
+          <td>${i.amount.toLocaleString()}</td>
+          <td>${new Date(i.createdAt).toLocaleString()}</td>
+        </tr>`;
+    });
 
-        // Withdrawals
-        const withdrawals = data.withdrawals || [];
-        document.getElementById("withdrawLogs").innerHTML = withdrawals.length
-          ? withdrawals.map(w => `
-            <tr>
-              <td>${Number(w.amount).toFixed(2)}</td>
-              <td>${w.method || "N/A"}</td>
-              <td>${w.address || "N/A"}</td>
-              <td class="status-${w.status}">${w.status}</td>
-            </tr>
-          `).join("")
-          : "<tr><td colspan='4'>No withdrawals found</td></tr>";
-
-        // Investments
-        const investments = data.investments || [];
-        document.getElementById("investLogs").innerHTML = investments.length
-          ? investments.map(i => `
-            <tr>
-              <td>${Number(i.amount).toFixed(2)}</td>
-              <td>${i.date ? new Date(i.date).toLocaleDateString() : "N/A"}</td>
-            </tr>
-          `).join("")
-          : "<tr><td colspan='2'>No investments found</td></tr>";
-
-      } catch (err) {
-        console.error(err);
-        alert("Error loading logs. Please login again.");
-        localStorage.removeItem("token");
-        window.location.href = "index.html";
-      }
-    }
-
-    window.onload = loadLogs;
-  </script>
+  } catch (err) {
+    console.error(err);
+    errorEl.textContent = err.message;
+  }
+})();
+</script>
 </body>
 </html>
