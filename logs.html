@@ -7,7 +7,7 @@
 <style>
   body {
     font-family: Arial, sans-serif;
-    background: #fff;
+    background: #fefcf5;
     color: #333;
     margin: 0;
     padding: 0;
@@ -22,7 +22,7 @@
 
   h1 { margin: 0; font-size: 24px; }
 
-  main { padding: 15px; max-width: 1000px; margin: auto; }
+  main { padding: 15px; max-width: 1200px; margin: auto; }
 
   .filter-buttons {
     display: flex;
@@ -54,6 +54,7 @@
     margin-top: 10px;
     display: none; /* hide initially */
     overflow-x: auto;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   }
 
   thead th {
@@ -69,18 +70,36 @@
     word-break: break-word;
   }
 
-  tr:nth-child(even) { background: #fef9f0; }
+  tr:nth-child(even) { background: #fff8e6; }
 
   .receipt { max-width: 80px; border: 1px solid #d4af37; border-radius: 5px; }
 
   .error { color: red; text-align: center; margin-top: 20px; }
 
   /* Responsive */
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     thead th, tbody td { font-size: 14px; padding: 6px; }
     .filter-buttons button { flex: 1 1 100%; }
   }
 
+  @media (max-width: 480px) {
+    table, thead, tbody, th, td, tr { display: block; }
+    thead tr { display: none; }
+    tbody td {
+      position: relative;
+      padding-left: 50%;
+      border-bottom: 1px solid #ccc;
+    }
+    tbody td::before {
+      content: attr(data-label);
+      position: absolute;
+      left: 10px;
+      top: 8px;
+      font-weight: bold;
+      color: #555;
+    }
+    .receipt { max-width: 100%; }
+  }
 </style>
 </head>
 <body>
@@ -147,7 +166,6 @@ async function loadHistory() {
 
     if (!res.ok || !data.success) throw new Error(data.message || 'Failed to load history');
 
-    // Safely default to empty arrays
     const deposits = data.deposits || [];
     const withdrawals = data.withdrawals || [];
     const investments = data.investments || [];
@@ -156,11 +174,11 @@ async function loadHistory() {
     const depositsBody = document.querySelector('#deposits-table tbody');
     depositsBody.innerHTML = deposits.length ? deposits.map(d => `
       <tr>
-        <td>${d.id}</td>
-        <td>${d.amount.toLocaleString()}</td>
-        <td>${d.method}</td>
-        <td>${d.status}</td>
-        <td>${d.screenshot ? `<img src="/uploads/${d.screenshot}" class="receipt">` : '-'}</td>
+        <td data-label="ID">${d.id}</td>
+        <td data-label="Amount">${d.amount.toLocaleString()}</td>
+        <td data-label="Method">${d.method}</td>
+        <td data-label="Status">${d.status}</td>
+        <td data-label="Screenshot">${d.screenshot ? `<img src="/uploads/${d.screenshot}" class="receipt">` : '-'}</td>
       </tr>
     `).join('') : `<tr><td colspan="5" style="text-align:center;">No deposits yet</td></tr>`;
 
@@ -168,11 +186,11 @@ async function loadHistory() {
     const withdrawalsBody = document.querySelector('#withdrawals-table tbody');
     withdrawalsBody.innerHTML = withdrawals.length ? withdrawals.map(w => `
       <tr>
-        <td>${w.id}</td>
-        <td>${w.amount.toLocaleString()}</td>
-        <td>${w.method}</td>
-        <td>${w.address}</td>
-        <td>${w.status}</td>
+        <td data-label="ID">${w.id}</td>
+        <td data-label="Amount">${w.amount.toLocaleString()}</td>
+        <td data-label="Method">${w.method}</td>
+        <td data-label="Address">${w.address}</td>
+        <td data-label="Status">${w.status}</td>
       </tr>
     `).join('') : `<tr><td colspan="5" style="text-align:center;">No withdrawals yet</td></tr>`;
 
@@ -180,9 +198,9 @@ async function loadHistory() {
     const investBody = document.querySelector('#investments-table tbody');
     investBody.innerHTML = investments.length ? investments.map(i => `
       <tr>
-        <td>${i.id}</td>
-        <td>${i.amount.toLocaleString()}</td>
-        <td>${new Date(i.createdAt).toLocaleString()}</td>
+        <td data-label="ID">${i.id}</td>
+        <td data-label="Amount">${i.amount.toLocaleString()}</td>
+        <td data-label="Date">${new Date(i.createdAt).toLocaleString()}</td>
       </tr>
     `).join('') : `<tr><td colspan="3" style="text-align:center;">No investments yet</td></tr>`;
 
@@ -192,7 +210,6 @@ async function loadHistory() {
   }
 }
 
-// Show only selected table
 function showTable(type) {
   const tables = ['deposits-table', 'withdrawals-table', 'investments-table'];
   tables.forEach(id => {
@@ -200,7 +217,6 @@ function showTable(type) {
   });
 }
 
-// Auto-load history
 document.addEventListener('DOMContentLoaded', loadHistory);
 </script>
 </body>

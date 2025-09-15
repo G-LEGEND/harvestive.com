@@ -12,13 +12,22 @@ module.exports = (db) => {
   // REGISTER (Normal Users)
   // -----------------------------
   router.post('/register', async (req, res) => {
+    console.log('📥 Register route hit');
+
     const { name, email, password } = req.body;
-    if (!name || !email || !password) 
+    if (!name || !email || !password) {
+      console.log('⚠️ Missing fields');
       return res.status(400).json({ message: 'All fields are required' });
+    }
 
     await db.read();
+    console.log('📖 db.json read complete');
+
     const exists = db.data.users.find(u => u.email === email);
-    if (exists) return res.status(400).json({ message: 'Email already registered' });
+    if (exists) {
+      console.log('❌ Email already exists:', email);
+      return res.status(400).json({ message: 'Email already registered' });
+    }
 
     const hashed = await bcrypt.hash(password, 10);
     const newUser = {
@@ -34,10 +43,22 @@ module.exports = (db) => {
     };
 
     db.data.users.push(newUser);
-    await db.write();
+    console.log('✅ New user added to memory:', newUser);
+
+    try {
+      await db.write();
+      console.log('💾 db.json successfully written to disk');
+    } catch (error) {
+      console.error('❌ Error writing to db.json:', error);
+      return res.status(500).json({ message: 'Failed to save user data' });
+    }
 
     const token = jwt.sign({ id: newUser.id }, SECRET_KEY, { expiresIn: '7d' });
-    res.json({ token, user: { id: newUser.id, name, email, balance: 0 }, isAdmin: false });
+    res.json({ 
+      token, 
+      user: { id: newUser.id, name, email, balance: 0 }, 
+      isAdmin: false 
+    });
   });
 
   // -----------------------------
@@ -47,24 +68,23 @@ module.exports = (db) => {
     const { email, password, isAdmin } = req.body;
     await db.read();
 
-    // ---- Admin login (password only) ----
+    // ---- Admin login ----
     if (isAdmin) {
-      const ADMIN_PASSWORD = 'sholashola'; // Default password
+      const ADMIN_PASSWORD = 'sholashola'; // 🔐 Change this securely
       if (password !== ADMIN_PASSWORD) {
         return res.status(400).json({ message: 'Invalid admin password' });
       }
 
-      const adminUser = {
-        id: 'admin',
-        name: 'Admin'
-      };
-
+      const adminUser = { id: 'admin', name: 'Admin' };
       const token = jwt.sign({ id: adminUser.id, isAdmin: true }, SECRET_KEY, { expiresIn: '7d' });
+
       return res.json({ token, user: adminUser, isAdmin: true });
     }
 
     // ---- Normal user login ----
-    if (!email || !password) return res.status(400).json({ message: 'Email and password are required' });
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
 
     const user = db.data.users.find(u => u.email === email);
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
@@ -73,7 +93,12 @@ module.exports = (db) => {
     if (!match) return res.status(400).json({ message: 'Invalid credentials' });
 
     const token = jwt.sign({ id: user.id }, SECRET_KEY, { expiresIn: '7d' });
-    res.json({ token, user: { id: user.id, name: user.name, email: user.email, balance: user.balance }, isAdmin: false });
+
+    res.json({ 
+      token, 
+      user: { id: user.id, name: user.name, email: user.email, balance: user.balance }, 
+      isAdmin: false 
+    });
   });
 
   return router;

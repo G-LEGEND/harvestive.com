@@ -41,5 +41,11 @@
       "amount": 2200,
       "createdAt": "2025-09-14T10:00:00.000Z"
     }
-  ]
+  ],
+  "paymentMethods": [],
+  "admin": {
+    "btcAddress": "",
+    "btcQR": "",
+    "paypal": ""
+  }
 }
