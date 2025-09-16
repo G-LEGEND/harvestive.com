@@ -24,8 +24,8 @@ async function main() {
 
   // 📷 Multer setup for file uploads
   const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, 'uploads/'),
-    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+    destination: (req, file, cb) => cb(null, uploadDir),
+    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname),
   });
   const upload = multer({ storage });
 
@@ -42,27 +42,22 @@ async function main() {
   app.use('/uploads', express.static(uploadDir));
 
   // 🔧 Serve HTML frontend pages
-  app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-  });
-
+  app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
   app.get(/^\/.*\.html$/, (req, res) => {
     const filePath = path.join(__dirname, req.path);
-    if (fs.existsSync(filePath)) {
-      res.sendFile(filePath);
-    } else {
-      res.status(404).send('Page not found');
-    }
+    if (fs.existsSync(filePath)) res.sendFile(filePath);
+    else res.status(404).send('Page not found');
   });
 
-  // 📦 Load routes
+  // 📦 Load routes properly
   const authRoutes = require('./routes/auth');
   const userRoutes = require('./routes/user');
   const adminRoutes = require('./routes/admin');
 
-  app.use('/auth', authRoutes(upload));
-  app.use('/user', userRoutes(upload));
-  app.use('/admin', adminRoutes(upload));
+  // ✅ Pass `upload` only if route exports a function that accepts it
+  app.use('/auth', typeof authRoutes === 'function' ? authRoutes(upload) : authRoutes);
+  app.use('/user', typeof userRoutes === 'function' ? userRoutes(upload) : userRoutes);
+  app.use('/admin', typeof adminRoutes === 'function' ? adminRoutes(upload) : adminRoutes);
 
   // ✅ Start server
   app.listen(PORT, () => {
