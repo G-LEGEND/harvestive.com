@@ -1,3 +1,4 @@
+// server.js
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
@@ -25,7 +26,7 @@ async function main() {
   // 📷 Multer setup for file uploads
   const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
-    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname),
+    filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`),
   });
   const upload = multer({ storage });
 
@@ -50,15 +51,14 @@ async function main() {
   });
 
   // 📦 Load routes
-  const authRoutes = require('./routes/auth');
-  const userRoutes = require('./routes/user');
-  const adminRoutes = require('./routes/admin');
+  const authRoutes = require('./routes/auth');          // exports Router directly
+  const userRoutes = require('./routes/user');          // exports function(upload)
+  const adminRoutes = require('./routes/admin');        // exports Router directly
 
-  // ✅ Mount routes — pass `upload` if the route file is a function
-  // Each route file should export an Express router (or a function returning a router)
-  app.use('/auth', authRoutes instanceof Function ? authRoutes(upload) : authRoutes);
-  app.use('/user', userRoutes instanceof Function ? userRoutes(upload) : userRoutes);
-  app.use('/admin', adminRoutes instanceof Function ? adminRoutes(upload) : adminRoutes);
+  // ✅ Use routes
+  app.use('/auth', authRoutes);                        // no args
+  app.use('/user', userRoutes(upload));               // pass multer
+  app.use('/admin', adminRoutes);                     // no args
 
   // ✅ Start server
   app.listen(PORT, () => {
@@ -66,4 +66,5 @@ async function main() {
   });
 }
 
+// Start everything
 main();
