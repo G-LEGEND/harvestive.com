@@ -1,5 +1,3 @@
-// admin.js
-
 // ------------------------
 // Admin Access Only
 // ------------------------
@@ -28,8 +26,8 @@ async function loadAdminData() {
 
     if (!res.ok || !data.success) throw new Error(data.message || 'Access denied');
 
-    loadUsers(data.users);
-    loadDeposits(data.pendingDeposits);
+    renderUsers(data.users);
+    renderDeposits(data.pendingDeposits);
   } catch (err) {
     console.error(err);
     alert('Failed to load admin dashboard');
@@ -39,7 +37,7 @@ async function loadAdminData() {
 // ------------------------
 // Render Users Table
 // ------------------------
-function loadUsers(users) {
+function renderUsers(users) {
   const table = document.getElementById('usersTable');
   table.innerHTML = `
     <tr>
@@ -60,7 +58,7 @@ function loadUsers(users) {
 // ------------------------
 // Render Deposits Table
 // ------------------------
-function loadDeposits(deposits) {
+function renderDeposits(deposits) {
   const table = document.getElementById('depositsTable');
   table.innerHTML = `
     <tr>
@@ -76,12 +74,12 @@ function loadDeposits(deposits) {
         <td>$${(d.amount || 0).toFixed(2)}</td>
         <td>${d.method || ''}</td>
         <td>
-          <a href="/uploads/${d.screenshot || ''}" target="_blank">
-            <img src="/uploads/${d.screenshot || ''}" class="screenshot-img" style="max-width:80px; border:1px solid #ccc;">
-          </a>
+          ${d.screenshot ? `<a href="https://harvestive-com.onrender.com/uploads/${d.screenshot}" target="_blank">
+            <img src="https://harvestive-com.onrender.com/uploads/${d.screenshot}" style="max-width:80px; border:1px solid #ccc;">
+          </a>` : 'No screenshot'}
         </td>
         <td>
-          <button onclick="approveDeposit('${d.id}')">Approve</button>
+          <button onclick="approveDeposit('${d._id}')">Approve</button>
         </td>
       </tr>
     `).join('')}
@@ -95,22 +93,19 @@ async function approveDeposit(depositId) {
   const token = localStorage.getItem('token');
   if (!token) return alert('Unauthorized');
 
-  const confirmAction = confirm('Are you sure you want to approve this deposit?');
-  if (!confirmAction) return;
+  if (!confirm('Are you sure you want to approve this deposit?')) return;
 
   try {
-    const res = await fetch(`http://localhost:8158/admin/approve/${depositId}`, { // <-- match server route
+    const res = await fetch(`https://harvestive-com.onrender.com/admin/approve/${depositId}`, {
       method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + token
-      }
+      headers: { Authorization: 'Bearer ' + token }
     });
 
     const data = await res.json();
     if (!res.ok || !data.success) throw new Error(data.message || 'Failed to approve deposit');
 
     alert('✅ Deposit approved!');
-    await loadAdminData(); // Refresh dashboard tables without reloading page
+    await loadAdminData();
   } catch (err) {
     console.error(err);
     alert('❌ Error approving deposit: ' + (err.message || 'Unknown'));

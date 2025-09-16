@@ -1,5 +1,5 @@
 // ----------------------------
-// Helper: Save & get JWT
+// JWT Helper Functions
 // ----------------------------
 function saveToken(token) {
   localStorage.setItem('token', token);
@@ -21,19 +21,10 @@ async function register() {
   const confirmPassword = document.getElementById('regPassword2')?.value;
 
   if (!name || !email || !password || !confirmPassword) {
-    alert('⚠️ Please fill in all fields.');
-    return;
+    return alert('⚠️ Please fill in all fields.');
   }
-
-  if (password.length < 6) {
-    alert('⚠️ Password must be at least 6 characters.');
-    return;
-  }
-
-  if (password !== confirmPassword) {
-    alert('⚠️ Passwords do not match!');
-    return;
-  }
+  if (password.length < 6) return alert('⚠️ Password must be at least 6 characters.');
+  if (password !== confirmPassword) return alert('⚠️ Passwords do not match!');
 
   try {
     const res = await fetch('http://localhost:3000/auth/register', {
@@ -41,6 +32,7 @@ async function register() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password })
     });
+
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Registration failed');
 
@@ -59,10 +51,7 @@ async function login() {
   const email = document.getElementById('loginEmail')?.value?.trim();
   const password = document.getElementById('loginPassword')?.value;
 
-  if (!email || !password) {
-    alert('⚠️ Please enter both email and password.');
-    return;
-  }
+  if (!email || !password) return alert('⚠️ Please enter both email and password.');
 
   try {
     const res = await fetch('http://localhost:3000/auth/login', {
@@ -70,6 +59,7 @@ async function login() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
+
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Login failed');
 
@@ -85,39 +75,34 @@ async function login() {
 // ADMIN LOGIN
 // ----------------------------
 async function adminLogin() {
-  const email = document.getElementById("email")?.value?.trim();
-  const password = document.getElementById("password")?.value?.trim();
+  const email = document.getElementById('email')?.value?.trim();
+  const password = document.getElementById('password')?.value?.trim();
 
-  if (!email || !password) {
-    alert("⚠️ Please fill both fields.");
-    return;
-  }
+  if (!email || !password) return alert('⚠️ Please fill both fields.');
 
   try {
-    const res = await fetch("http://localhost:3000/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const res = await fetch('http://localhost:3000/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, isAdmin: true })
     });
 
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Login failed");
+    if (!res.ok) throw new Error(data.message || 'Login failed');
 
-    // Save token and admin flag
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("isAdmin", "true");
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('isAdmin', 'true');
 
-    alert("✅ Admin login successful!");
-    window.location.href = "admin-dashboard.html";
+    alert('✅ Admin login successful!');
+    window.location.href = 'admin-dashboard.html';
   } catch (err) {
-    console.error(err);
-    alert("❌ " + err.message);
+    alert('❌ ' + err.message);
   }
 }
 
-// Optional: allow Enter key to trigger admin login
-document.addEventListener("keypress", function(event) {
-  if (event.key === "Enter" && window.location.pathname.endsWith("admin-login.html")) {
+// Enter key triggers admin login
+document.addEventListener('keypress', function(event) {
+  if (event.key === 'Enter' && window.location.pathname.endsWith('admin-login.html')) {
     event.preventDefault();
     adminLogin();
   }
@@ -128,7 +113,7 @@ document.addEventListener("keypress", function(event) {
 // ----------------------------
 function logout() {
   removeToken();
-  localStorage.removeItem("isAdmin");
+  localStorage.removeItem('isAdmin');
   window.location.href = 'index.html';
 }
 
@@ -137,29 +122,23 @@ function logout() {
 // ----------------------------
 async function loadDashboard() {
   const token = getToken();
-  if (!token) {
-    window.location.href = 'index.html';
-    return;
-  }
+  if (!token) return window.location.href = 'index.html';
 
   try {
-    const res = await fetch('http://localhost:3000/user/me', {
+    const res = await fetch('http://localhost:3000/user/dashboard', {
       headers: { Authorization: 'Bearer ' + token }
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Failed to load dashboard');
 
     const user = data.user;
-    document.getElementById('welcomeText').innerText = 'Welcome, ' + user.name;
+    document.getElementById('welcomeText').innerText = `Welcome, ${user.name}`;
     document.getElementById('balance').innerText = user.balance.toFixed(2) + ' USD';
     document.getElementById('deposit').innerText = (user.totalDeposit || 0).toFixed(2) + ' USD';
     document.getElementById('withdraw').innerText = (user.totalWithdraw || 0).toFixed(2) + ' USD';
     document.getElementById('invest').innerText = (user.totalInvest || 0).toFixed(2) + ' USD';
     document.getElementById('currentInvest').innerText = (user.currentInvest || 0).toFixed(2) + ' USD';
-
-    document.getElementById('referralLink').value =
-      window.location.origin + '/register.html?ref=' + user.id;
-
+    document.getElementById('referralLink').value = `${window.location.origin}/register.html?ref=${user._id}`;
   } catch (err) {
     alert('❌ ' + err.message);
     logout();
@@ -182,15 +161,12 @@ function closeModal() {
 
 function showPaymentInfo() {
   const amount = parseFloat(document.getElementById('depositAmount').value);
-  if (!amount || amount < 100) {
-    alert('Minimum deposit is 100 USD.');
-    return;
-  }
+  if (!amount || amount < 100) return alert('Minimum deposit is 100 USD.');
 
   document.getElementById('depositModal').style.display = 'none';
   document.getElementById('paymentInfo').style.display = 'block';
 
-  document.getElementById('gatewayName').innerText = selectedGateway + ' PAYMENT';
+  document.getElementById('gatewayName').innerText = `${selectedGateway} PAYMENT`;
   document.getElementById('payAmount').innerText = amount.toFixed(2) + ' USD';
   document.getElementById('totalAmount').innerText = amount.toFixed(2) + ' USD';
 
@@ -232,7 +208,7 @@ async function submitDeposit() {
     if (!res.ok) throw new Error(data.message || 'Deposit failed');
 
     alert('✅ Deposit submitted!');
-    document.getElementById('depositModal').style.display = 'none';
+    closeModal();
     document.getElementById('paymentInfo').style.display = 'none';
   } catch (err) {
     alert('❌ ' + err.message);
@@ -240,7 +216,7 @@ async function submitDeposit() {
 }
 
 // ----------------------------
-// Copy referral link
+// COPY REFERRAL LINK
 // ----------------------------
 function copyReferral() {
   const input = document.getElementById('referralLink');
@@ -249,7 +225,7 @@ function copyReferral() {
 }
 
 // ----------------------------
-// Auto-run dashboard loader if on dashboard.html
+// Auto-run dashboard loader
 // ----------------------------
 if (window.location.pathname.endsWith('dashboard.html')) {
   document.addEventListener('DOMContentLoaded', loadDashboard);

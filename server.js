@@ -49,15 +49,16 @@ async function main() {
     else res.status(404).send('Page not found');
   });
 
-  // 📦 Load routes properly
+  // 📦 Load routes
   const authRoutes = require('./routes/auth');
   const userRoutes = require('./routes/user');
   const adminRoutes = require('./routes/admin');
 
-  // ✅ Pass `upload` only if route exports a function that accepts it
-  app.use('/auth', typeof authRoutes === 'function' ? authRoutes(upload) : authRoutes);
-  app.use('/user', typeof userRoutes === 'function' ? userRoutes(upload) : userRoutes);
-  app.use('/admin', typeof adminRoutes === 'function' ? adminRoutes(upload) : adminRoutes);
+  // ✅ Mount routes — pass `upload` if the route file is a function
+  // Each route file should export an Express router (or a function returning a router)
+  app.use('/auth', authRoutes instanceof Function ? authRoutes(upload) : authRoutes);
+  app.use('/user', userRoutes instanceof Function ? userRoutes(upload) : userRoutes);
+  app.use('/admin', adminRoutes instanceof Function ? adminRoutes(upload) : adminRoutes);
 
   // ✅ Start server
   app.listen(PORT, () => {

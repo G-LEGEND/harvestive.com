@@ -1,4 +1,3 @@
-// routes/admin.js
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
@@ -15,25 +14,21 @@ const router = express.Router();
 // Multer setup for QR code upload
 // -----------------------------
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
+  destination: (req, file, cb) => {
     const uploadDir = path.join(__dirname, '..', 'uploads');
     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
     cb(null, uploadDir);
   },
-  filename: function (req, file, cb) {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  }
+  filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
 });
 const upload = multer({ storage });
 
 // -----------------------------
-// Middleware: verifyAdmin using header token
+// Middleware: verifyAdmin
 // -----------------------------
 function verifyAdmin(req, res, next) {
   const token = req.headers['authorization']?.replace('Bearer ', '');
-  if (token !== 'sholashola') {
-    return res.status(401).json({ success: false, message: 'Unauthorized admin' });
-  }
+  if (token !== 'sholashola') return res.status(401).json({ success: false, message: 'Unauthorized admin' });
   next();
 }
 
@@ -45,6 +40,7 @@ router.get('/dashboard', verifyAdmin, async (req, res) => {
     const users = await User.find({});
     const deposits = await Deposit.find({ approved: false });
 
+    // Include user info in each pending deposit
     const pendingDeposits = await Promise.all(
       deposits.map(async (d) => {
         const user = await User.findById(d.userId).lean();
@@ -113,22 +109,16 @@ router.get('/payment-methods', async (req, res) => {
 // -----------------------------
 // POST /admin/payment-methods
 // -----------------------------
-router.post('/payment-methods', upload.single('qr'), async (req, res) => {
+router.post('/payment-methods', verifyAdmin, upload.single('qr'), async (req, res) => {
   try {
     const { name, address } = req.body;
     const qr = req.file ? req.file.filename : '';
 
-    if (!name || !address) {
-      return res.status(400).json({ success: false, message: 'Name and address are required' });
-    }
+    if (!name || !address) return res.status(400).json({ success: false, message: 'Name and address are required' });
 
-    // Optional: clear old methods to only save the latest
+    // Remove old methods and save the new one
     await PaymentMethod.deleteMany({});
-    const method = new PaymentMethod({
-      name,
-      address,
-      qr
-    });
+    const method = new PaymentMethod({ name, address, qr });
     await method.save();
 
     res.json({ success: true, message: 'Payment method saved', method });

@@ -6,7 +6,7 @@ const User = require('../models/User');
 
 const SECRET_KEY = 'your_secret_key_here'; // 🔒 Make this stronger in production
 
-module.exports = () => {
+module.exports = (upload) => { // Accept `upload` in case you add file uploads
   const router = express.Router();
 
   // -----------------------------
